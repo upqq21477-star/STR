@@ -1,0 +1,36 @@
+{
+  "$schema_version": "4.3",
+  "$role": "overlay_layer",
+  "$note": "Overlay Layer 資料檔。cross-link 是遊戲系統常態，不是例外，此層為 first-class layer。分為 edges（edge-centric）與 scenarios（scenario-centric）兩種查詢模式，服務不同需求，不得混用。",
+
+  "$authority": {
+    "writable_by": "human_or_compile_output",
+    "ai_access": "read_write",
+    "note": "AI 可在 COMPILE 模式輸出新版 overlay.json，但必須符合 admission_rules"
+  },
+
+  "$edge_type_policy": "edges 的 edge_type 必須使用 sys-l3k-arch.json edge_registry 中的 frozen enum（writes_to / reads_from / blocks / derives_from / owns）。禁止 AI 自行擴充。",
+
+  "$admission_rules": {
+    "edges": [
+      "source 與 target 必須分屬不同 domain",
+      "edge_type 必須在 frozen enum 內",
+      "edge uid 由 generate_uid.js 產生，禁止 AI 自行生成"
+    ],
+    "scenarios": [
+      "必須涉及 2 個以上不同 domain",
+      "必須有具名的 scenario label（領域事件名詞，禁止使用 _relation / _link / _dependency 後綴）",
+      "participants 上限 8 個",
+      "禁止巢狀 scenario"
+    ]
+  },
+
+  "$query_modes": {
+    "edge_centric": "適合 impact analysis：某節點修改後會影響哪些下游？→ 查 edges[]",
+    "scenario_centric": "適合 context loading：某事件涉及哪些節點，應一起讀哪些 context？→ 查 scenarios[]"
+  },
+
+  "edges": [],
+
+  "scenarios": []
+}

@@ -1,0 +1,30 @@
+{
+  "$schema_version": "4.3",
+  "$minimum_reader_version": "4.0",
+  "$role": "system_registry",
+  "$note": "UI / 渲染系統。單向輸出：此系統只消費其他系統的狀態，不被其他系統依賴。effect[] 中不應出現指向其他系統的 writes_to edge。",
+
+  "$system_id": "l3k-ui",
+  "display_name": "UI / 渲染",
+  "updated_at": "",
+  "write_count": 0,
+  "derived_from_l0_write_count": 0,
+
+  "owns_tags": {},
+
+  "shared_state": {
+    "$source": "derived_from_l0",
+    "reads":  [],
+    "writes": []
+  },
+
+  "design_memory": {
+    "$note": "UI 節點的 anti_patterns，尤其關注：將渲染邏輯滲入業務層、在 hot_path 上做 DOM/Canvas 分配。",
+    "anti_patterns": [],
+    "forbidden_directions": [
+      "UI 系統不得反向寫入其他系統的可變狀態（單向輸出原則）"
+    ]
+  },
+
+  "id_index": []
+}

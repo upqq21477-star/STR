@@ -1,0 +1,28 @@
+{
+  "$schema_version": "4.3",
+  "$role": "symbol_identity_registry",
+  "$note": "uid identity 與 identity lineage tombstone 的 source of truth。此檔由人類維護，AI 唯讀。compile.js 從此檔讀取 tombstone 資料，不再從 id_index.json 讀取。",
+
+  "$authority": {
+    "writable_by": "human_only",
+    "ai_access": "read_only",
+    "tombstone_policy": "append_only",
+    "violation": "修改或刪除任何 tombstone 條目視為 INTEGRITY_VIOLATION"
+  },
+
+  "$forbidden": "禁止修改或刪除 tombstones{} 中任何既有條目。uid 一旦進入 tombstone 狀態，永遠保留。",
+
+  "$lineage_type_enum": {
+    "$note": "frozen enum。lineage.type 的允許值。",
+    "replaced":            "一對一取代（replaced_by 為單一 uid）",
+    "split":               "一拆多（replaced_by 為多個 uid 陣列）",
+    "merged":              "多合一（replaced_by 為單一 uid；多個 tombstone 指向同一目標）",
+    "semantic_equivalent": "語意相同但 domain 搬移（uid 不變，此欄位記錄原始位置）"
+  },
+
+  "$validation_note": "lineage 欄位：compile.js 驗證 schema 結構（type 必須在 frozen enum 內、replaced_by 必須為有效 uid 格式），不驗證語意正確性。在有真實 consumer 前，不應過度填寫 lineage。",
+
+  "tombstones": {
+    "$note": "已廢棄節點的 uid 永久保留區。每個 key 為廢棄節點的 uid。"
+  }
+}

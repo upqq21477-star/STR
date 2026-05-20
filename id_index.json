@@ -1,0 +1,11 @@
+{
+  "$integrity": {
+    "entry_count": 0,
+    "tombstone_count": 0,
+    "generated_at": "",
+    "generated_by": "",
+    "integrity_hash": "",
+    "note": "entry_count 與實際 entries[] 長度不符時，AI 應拒絕操作並警告：INTEGRITY_MISMATCH。generated_by 應為 compile.js，若為空字串表示從未執行 compile。"
+  },
+  "entries": []
+}

@@ -1,0 +1,60 @@
+{
+  "$schema_version": "4.3",
+  "$minimum_reader_version": "4.0",
+  "$role": "system_registry",
+  "$note": "L1 系統層。持有本系統的所有 L5 節點（id_index）、語意標籤、設計記憶與狀態所有權。複製本檔並重命名為 sys-[name].json 使用。v4.0：節點改用 uid（12位 hex）+ display_id（拓撲路徑），effect[] 取代舊版 affects[]。",
+
+  "$system_id": "",
+  "display_name": "",
+  "updated_at": "",
+  "write_count": 0,
+  "derived_from_l0_write_count": 0,
+
+  "owns_tags": {
+    "$note": "本系統專有的語意標籤。通用標籤定義於 tags.json，不在此重複。",
+    "$tag_template": {
+      "priority": 0.8,
+      "category": "technical",
+      "description": "",
+      "related": []
+    }
+  },
+
+  "shared_state": {
+    "$note": "本系統對共享可變狀態的讀寫關係。此欄為 L0 cross_system_state 的冗餘副本，不是獨立權威值。L0 存在時以 L0 為準；L0 缺失時本欄 read-only，禁止修改。",
+    "$source": "derived_from_l0",
+    "reads":  [],
+    "writes": []
+  },
+
+  "design_memory": {
+    "$note": "本系統的 anti_patterns 與禁止方向。anti_patterns 使用 failure_signature 格式：{ pattern, symptoms[], root_cause, replacement }，讓 AI 做反向推理（症狀 → 模式 → 警示）。",
+    "anti_patterns": [],
+    "forbidden_directions": []
+  },
+
+  "id_index": [],
+
+  "$node_example": {
+    "$comment": "節點格式參考（此欄位不被 compile.js 讀取）。新增節點時複製到 id_index[] 並移除 $comment 欄位。",
+    "uid": "由 node generate_uid.js 產生",
+    "display_id": "ROOT-A",
+    "title": "節點標題",
+    "level": 5,
+    "parent_id": null,
+    "tags": [],
+    "status": "pending",
+    "summary": "",
+    "updated_at": "",
+    "effect": [
+      {
+        "$comment": "uid = 目標節點的 12位 hex；edge_type 必須已在 sys-*-arch.json edge_registry 登記",
+        "uid": "",
+        "edge_type": "derives_from"
+      }
+    ],
+    "cross_state_refs": [],
+    "reads": [],
+    "writes": []
+  }
+}

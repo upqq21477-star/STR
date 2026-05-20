@@ -1,0 +1,50 @@
+{
+  "$schema_version": "4.3",
+  "$role": "project_overview",
+  "$note": "L0 總覽。持有跨系統依賴圖、系統索引與全域設計記憶。不存放 L5 節點內容，各系統完整節點在各自 sys-[name].json 內。source of truth：此檔為跨系統狀態的唯一權威來源。",
+
+  "project_name": "",
+  "display_name": "",
+  "root_code": "",
+  "root_code_note": "2~5 字母唯一代碼（全大寫）。所有節點 display_id 的 ROOT 必須與此一致。建立後不可更改，合併時需確保跨專案 root_code 不衝突。",
+  "created_at": "",
+  "updated_at": "",
+  "write_count": 0,
+
+  "dependency_rules": {
+    "allow_cycles": false,
+    "soft_depth_warning": 8,
+    "hard_depth_limit": 32,
+    "cycle_scope": "same-tick",
+    "cycle_scope_note": "禁止的是同一執行 tick 內的環狀依賴。跨 tick 的時序回饋以 cross_system_state.chain 的 phase 欄位表達，不在 effect[] 中建立反向 edge。"
+  },
+
+  "l0": {
+    "project_goal": "",
+    "tech_stack": "",
+    "hard_constraints": [],
+    "soft_constraints": [],
+    "design_memory": {
+      "$note": "跨系統層級的 anti_patterns（影響整體架構者）。單一系統的 anti_patterns 存放於各 sys-[name].json。使用 failure_signature 格式：{ pattern, symptoms[], root_cause, replacement }。",
+      "anti_patterns": [],
+      "forbidden_directions": []
+    }
+  },
+
+  "systems": {
+    "$note": "每個系統對應一個 sys-[name].json 檔案。exports[] 為淺層摘要，完整節點在 L1 檔內。每次 COMPILE 必須同步更新 node_count 與 exports[]。"
+  },
+
+  "cross_system_state": {
+    "$note": "跨系統共享可變狀態的所有權與依賴鏈。每個 key 是狀態名稱。produced_by：唯一寫入方（對應 L1 $system_id）；consumed_by：讀取方陣列；chain：此狀態改變後連鎖影響的下游狀態，{ state, phase } 格式；phase 相同的狀態可並行，不同 phase 必須按序執行。write_locked：true 時非 produced_by 系統禁止寫入（F-11 延伸）。update_trigger：此狀態的寫入時機描述，供 impact analysis 使用。",
+    "$state_template": {
+      "produced_by": "",
+      "consumed_by": [],
+      "chain": [
+        { "state": "", "phase": "A" }
+      ],
+      "write_locked": true,
+      "update_trigger": ""
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema_version": "4.3",
+  "$minimum_reader_version": "4.0",
+  "$role": "system_registry",
+  "$note": "外交 / 戰役層。relationGraph 為此系統唯一輸出，單向流向 UI 與 unit 系統。不持有即時戰鬥狀態。",
+
+  "$system_id": "l3k-diplomacy",
+  "display_name": "外交 / 戰役層",
+  "updated_at": "",
+  "write_count": 0,
+  "derived_from_l0_write_count": 0,
+
+  "owns_tags": {},
+
+  "shared_state": {
+    "$source": "derived_from_l0",
+    "reads":  [],
+    "writes": []
+  },
+
+  "design_memory": {
+    "anti_patterns": [],
+    "forbidden_directions": [
+      "外交系統不得直接讀取或修改 combat 系統的即時戰鬥狀態（應透過 cross_system_state chain 的 phase 機制間接傳遞）"
+    ]
+  },
+
+  "id_index": []
+}

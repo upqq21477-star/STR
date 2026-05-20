@@ -1,0 +1,313 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema_version": "v2.0",
+  "schema_date": "2026-05-17",
+  "title": "DevLog Node v2.0",
+  "description": "STR v4.0 節點格式。v2.0 主要變更：id 欄位拆分為 uid（系統身份）+ display_id（人類閱讀拓撲）；affects[] 廢棄，改為 effect[]{uid, edge_type}。",
+  "$breaking_changes_from_v1": [
+    "id（必填）→ 拆分為 uid（必填）+ display_id（必填）",
+    "affects[]（自由字串）→ effect[]{uid, edge_type}（結構化）",
+    "cross_links 禁止使用 display_id，必須使用 uid"
+  ],
+  "type": "object",
+  "required": [
+    "uid",
+    "display_id",
+    "title",
+    "level",
+    "status"
+  ],
+  "properties": {
+    "uid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$",
+      "description": "節點唯一識別碼。v4.3 新建：16位小寫十六進位（64-bit）；v4.0 存量：12位（legacy，仍合法）。由 generate_uid.js 產生，建立後不可修改。禁止 AI 自行生成。"
+    },
+    "display_id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,5}(-[A-Z][0-9]*)+$",
+      "description": "人類閱讀用拓撲 ID。格式：ROOT-SEG(-SEG)*，例如 L3K-A-B2-C5。由樹狀位置決定性推導，節點搬移後可重建（uid 不變）。禁止用於 cross_links 參照，必須使用 uid。"
+    },
+    "title": {
+      "type": "string",
+      "description": "節點標題"
+    },
+    "level": {
+      "type": "integer",
+      "const": 5,
+      "description": "固定為 5（L5 節點）"
+    },
+    "parent_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "父節點 display_id（用於樹狀結構顯示，不作 cross_links 參照）"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "語意標籤。可引用 tags.json 的 tags key 或 runtime_hints key。"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "wip",
+        "done",
+        "blocked"
+      ],
+      "description": "節點狀態"
+    },
+    "summary": {
+      "type": "string",
+      "description": "節點內容摘要"
+    },
+    "effect": {
+      "type": "array",
+      "description": "此節點對其他節點產生的有向邊。禁止使用 display_id，必須使用 uid。edge_type 必須已在 sys-*-arch.json edge_registry 中登記。",
+      "items": {
+        "type": "object",
+        "required": [
+          "uid",
+          "edge_type"
+        ],
+        "properties": {
+          "uid": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12}$",
+            "description": "目標節點的 uid"
+          },
+          "edge_type": {
+            "type": "string",
+            "enum": [
+              "writes_to",
+              "reads_from",
+              "blocks",
+              "derives_from",
+              "owns"
+            ],
+            "description": "邊語意類型。必須在 edge_registry 中登記。owns 類型：每個目標 uid 只能被一個 owns 指向。"
+          },
+          "_review_required": {
+            "type": "boolean",
+            "description": "遷移工具自動產生的 edge，需人工確認 edge_type 是否正確"
+          },
+          "_unresolved": {
+            "type": "boolean",
+            "description": "遷移工具無法解析的目標 uid，需人工處理"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "cross_state_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "條件必填。節點 summary 或 code_ref 涉及任何 cross_system_state 登記狀態名稱時必填。reads ∪ writes 必須為本欄位子集。"
+    },
+    "reads": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "條件必填。此節點讀取的共享可變狀態。必須為 cross_state_refs 的子集。"
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "條件必填。此節點寫入的共享可變狀態。必須為 cross_state_refs 的子集。"
+    },
+    "objective": {
+      "type": "string",
+      "description": "此節點目標"
+    },
+    "context": {
+      "type": "string",
+      "description": "背景脈絡"
+    },
+    "action": {
+      "type": "string",
+      "description": "執行動作"
+    },
+    "result": {
+      "type": "string",
+      "description": "執行結果"
+    },
+    "rootCause": {
+      "type": "string",
+      "description": "問題根因（FIX 節點使用）"
+    },
+    "handoff": {
+      "type": "string",
+      "description": "交接資訊"
+    },
+    "humanNote": {
+      "type": "string",
+      "description": "人工附注"
+    },
+    "code_ref": {
+      "type": "string",
+      "description": "對應源碼函數或檔案"
+    },
+    "code_spec": {
+      "type": "string",
+      "description": "指向 Code Spec Layer 的對應節點 anchor。格式：[filename]#[display_id]，例如 \"code-l3k-logistics.md#L3K-A-B2-C5\"。filename 必須符合 code-*.md 命名；display_id 必須與本節點一致。$note：此欄為 display_id 指標，與 reads/writes（state 名稱字串）語意不同。",
+      "pattern": "^code-[a-z0-9-]+\\.md#[A-Z]{2,5}(-[A-Z][0-9]*)+$"
+    },
+    "supersedes": {
+      "type": "string",
+      "description": "被此節點取代的舊節點 display_id"
+    },
+    "invalidates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "此節點使哪些節點結論失效（display_id 陣列）"
+    },
+    "change_type": {
+      "type": "string",
+      "enum": [
+        "feature",
+        "fix",
+        "refactor",
+        "config",
+        "doc",
+        "test",
+        "remove",
+        "none",
+        ""
+      ],
+      "description": "變更類型"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "adopted",
+        "partial",
+        "rejected",
+        "pending",
+        ""
+      ],
+      "description": "決策結果。partial 為 DevLog 私有值，對外輸出前必須轉換為 pending（見 devlog-bridge-spec.md）"
+    },
+    "validation": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "verified",
+        "failed"
+      ],
+      "description": "驗證狀態"
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "resolved": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO 8601 最後更新時間"
+    },
+    "_migrated_from_id": {
+      "type": "string",
+      "description": "遷移工具自動填寫。遷移前的舊版 id 欄位值，供人工核對使用。"
+    },
+    "_v32_affects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "遷移工具保留的原 affects[] 內容，供人工確認 edge_type 轉換是否正確。確認完畢後可刪除。"
+    }
+  },
+  "deprecated_fields": {
+    "id": {
+      "replaced_by": [
+        "uid",
+        "display_id"
+      ],
+      "removed_in": "v2.0",
+      "migration": "node migrate_v3_to_v4.js"
+    },
+    "affects": {
+      "replaced_by": "effect[]",
+      "removed_in": "v2.0",
+      "migration": "migrate_v3_to_v4.js 自動轉換，edge_type 預設 derives_from，需人工審查"
+    }
+  },
+  "branch_schema": {
+    "description": "DevLog branch（makeBranch()），與 node 並列存放於 _db.branches。v2.0 無變更。",
+    "required": [
+      "id",
+      "pid",
+      "name",
+      "color",
+      "level",
+      "children"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "pid": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "name": {
+        "type": "string"
+      },
+      "color": {
+        "type": "string"
+      },
+      "level": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "mission": {
+        "type": "string"
+      },
+      "namespace": {
+        "type": "string",
+        "default": "shared"
+      },
+      "children": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    }
+  }
+}

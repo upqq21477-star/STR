@@ -1,0 +1,43 @@
+{
+  "$schema_version": "4.3",
+  "$minimum_reader_version": "4.0",
+  "$role": "system_registry",
+  "$note": "參考 / 公式層。只存放確定性資料：公式、enum 表、phase 表、緩衝區宣告。所有資料必須是 deterministic（給定輸入必然得到相同輸出）。不存放 heuristic、anti-patterns 或主觀設計判斷（這些屬於 sys-l3k-cognition.json）。",
+
+  "$system_id": "l3k-ref",
+  "display_name": "參考 / 公式層",
+  "updated_at": "",
+  "write_count": 0,
+  "derived_from_l0_write_count": 0,
+
+  "owns_tags": {
+    "公式": {
+      "priority": 0.9,
+      "category": "reference",
+      "description": "確定性計算公式節點",
+      "related": []
+    },
+    "enum表": {
+      "priority": 0.8,
+      "category": "reference",
+      "description": "固定值域的列舉表",
+      "related": []
+    }
+  },
+
+  "shared_state": {
+    "$source": "derived_from_l0",
+    "reads":  [],
+    "writes": []
+  },
+
+  "design_memory": {
+    "anti_patterns": [],
+    "forbidden_directions": [
+      "ref 系統不存放 anti-patterns 或設計啟發（存放於 cognition 系統）",
+      "ref 系統節點不得帶有 heuristic 或條件性建議，只描述確定性規則"
+    ]
+  },
+
+  "id_index": []
+}

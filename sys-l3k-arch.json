@@ -1,0 +1,219 @@
+{
+  "$schema_version": "4.5",
+  "$role": "architecture_declaration",
+  "$note": "架構宣言層。此檔為唯讀，由人類維護，AI 不得修改任何欄位。edge_type 擴充必須先在 edge_registry 登記後才能使用。",
+  "$authority": {
+    "writable_by": "human_only",
+    "ai_access": "read_only",
+    "violation": "AI 修改此檔視為 INTEGRITY_VIOLATION，必須停止操作"
+  },
+  "edge_registry": {
+    "$note": "所有允許的 edge_type 定義於此（frozen enum）。AI 寫入 effect[] 時必須使用此表中的 key。新增 edge_type 必須先由人類在此登記，不得由 AI 自行擴充。rationale: inferential determinism 優先於 extensibility。",
+    "writes_to": {
+      "category": "mutation",
+      "directional": true,
+      "transitive": false,
+      "description": "此節點寫入目標節點所代表的狀態或資料",
+      "allowed_sources": [
+        "any"
+      ],
+      "allowed_targets": [
+        "state",
+        "buffer",
+        "node"
+      ]
+    },
+    "reads_from": {
+      "category": "dependency",
+      "directional": true,
+      "transitive": false,
+      "description": "此節點讀取目標節點所代表的狀態或資料",
+      "allowed_sources": [
+        "any"
+      ],
+      "allowed_targets": [
+        "state",
+        "buffer",
+        "node"
+      ]
+    },
+    "blocks": {
+      "category": "constraint",
+      "directional": true,
+      "transitive": false,
+      "description": "此節點的執行或完成，阻塞目標節點的執行",
+      "allowed_sources": [
+        "any"
+      ],
+      "allowed_targets": [
+        "any"
+      ]
+    },
+    "derives_from": {
+      "category": "derivation",
+      "directional": true,
+      "transitive": true,
+      "description": "此節點的設計結論或邏輯，推導自目標節點",
+      "allowed_sources": [
+        "any"
+      ],
+      "allowed_targets": [
+        "any"
+      ]
+    },
+    "owns": {
+      "category": "ownership",
+      "directional": true,
+      "transitive": false,
+      "description": "此節點是目標可變狀態的唯一寫入方。每個可變狀態只能有一個 owns edge（compile.js 強制驗證唯一性）。",
+      "allowed_sources": [
+        "system_node"
+      ],
+      "allowed_targets": [
+        "state"
+      ],
+      "uniqueness": "one_owner_per_target"
+    },
+    "$expansion_policy": "禁止 AI 自行擴充 edge_type。新增前先問：現有五種 edge 真的無法表達這個關係嗎？rationale: LLM 對固定語意 primitive 的推理穩定度遠高於 dynamic ontology（inferential determinism）。"
+  },
+  "dependency_rules": {
+    "allow_cycles": false,
+    "soft_depth_warning": 8,
+    "hard_depth_limit": 32,
+    "cycle_scope_note": "same-tick cycle 視為非法。temporal feedback（跨 tick 的回饋）不在 effect[] 中表達，以 cross_system_state.chain 的 phase 欄位描述。"
+  },
+  "governance": {
+    "uid_policy": {
+      "format": "16位小寫十六進位",
+      "bit_width": 64,
+      "generation": "crypto.randomBytes(8).toString('hex')",
+      "immutable": true,
+      "collision_check": "merge 前必須執行 compile.js，uid 衝突時 compile 停止",
+      "legacy_acceptance": "compile.js 同時接受 12位（v4.0）與 16位（v4.3）格式，COMPILE_REPORT 標注 legacy uid 數量",
+      "namespace_reserved": true,
+      "namespace_note": "未來 multi-project merge 需求出現時，可擴充為 {namespace}:{uid} 格式；本版不實作。觸發訊號：出現第一個真實的 multi-project merge 需求。"
+    },
+    "display_id_rules": {
+      "grammar": "{ROOT}(-{SEGMENT})+",
+      "root_pattern": "[A-Z]{2,5}",
+      "root_note": "2~5 個大寫字母，例如 L3K、STR、PROJ",
+      "segment_pattern": "[A-Z][0-9]*",
+      "segment_note": "1 個大寫字母後接可選數字，例如 A、B2、C10",
+      "separator": "-",
+      "max_depth": 8,
+      "example": "L3K-A-B2-C5",
+      "deterministic": true,
+      "deterministic_note": "相同樹狀位置必定推導出相同 display_id"
+    },
+    "schema_version": "4.5",
+    "minimum_reader_version": "4.0",
+    "schema_version_note": "讀入版本 < 4.0 的檔案時，AGENTS 必須警告並暫停操作",
+    "precedence_rules": {
+      "$note": "Tree 與 Overlay 語意衝突時的裁決順序。AI 不得自行判斷優先級，必須依此表執行。此為靜態規則，compile.js 可驗證，不引入動態解析邏輯。",
+      "write_permission": "owns edge 永遠優先於 scenario participant roles。擁有 owns edge 的系統是唯一合法寫入方，即使 scenario 中該節點被標記為 participant。",
+      "execution_blocking": "Overlay 的 blocks edge 優先於 Tree hierarchy 繼承的執行順序。blocks 是顯式約束，Tree 繼承是隱式預設。",
+      "semantic_inheritance": "Tree hierarchy 的 design_memory 繼承優先於 Overlay scenario 的語意群聚。節點的 anti_patterns 來自 Tree 父節點，不因加入 scenario 而改變。",
+      "conflict_escalation": "若上述規則無法裁決，compile.js 輸出 PRECEDENCE_CONFLICT 警告，停止操作，等待人工決定。"
+    }
+  },
+  "file_architecture": {
+    "$note": "v4.3 分檔結構。每個檔案的職責不得重疊。",
+    "sys-l3k-arch.json": "架構宣言（本檔）。唯讀。edge_registry、governance、precedence_rules。",
+    "sys-l3k-ui.json": "UI / 渲染系統 L5 節點（單向輸出，不被其他系統依賴）",
+    "sys-l3k-diplomacy.json": "外交 / 戰役層 L5 節點",
+    "sys-l3k-ref.json": "參考層：公式、enum、phase 表（deterministic，不含 anti-patterns）",
+    "sys-l3k-cognition.json": "認知層：anti-patterns（heuristic，與 reference data 分離）",
+    "sys-overlay.json": "Overlay Layer 管理檔（edges[] + scenarios[] 雙結構）",
+    "symbol-table.json": "uid identity + lineage tombstone。source of truth。AI 唯讀。"
+  },
+  "compile_pipeline": {
+    "$note": "Claude 讀取的是 compiled_graph.bundle.json，不是 source files。",
+    "source_layer": "sys-*.json（人類維護，source of truth）",
+    "compile_tool": "node compile.js",
+    "artifact": "compiled_graph.bundle.json（AI context transport format）",
+    "runtime": "Claude context window（session state，非持久）",
+    "pre_session_workflow": [
+      "1. 修改 sys-*.json（或由 AI COMPILE 輸出後下載覆蓋）",
+      "2. node compile.js（驗證 + 產生 bundle）",
+      "3. 確認 COMPILE_REPORT.json status=ok",
+      "4. 上傳 compiled_graph.bundle.json + AGENTS-axioms.md + AGENTS-protocol.md + 當次工作文件"
+    ],
+    "upload_set_minimal": [
+      "compiled_graph.bundle.json",
+      "AGENTS-axioms.md",
+      "AGENTS-protocol.md",
+      "[當次工作文件]"
+    ],
+    "upload_set_with_source": [
+      "project-overview.json（需修改 L0 時加入）",
+      "sys-[目標系統].json（需輸出新版 L1 時加入）"
+    ]
+  },
+  "tombstone_policy": {
+    "$note": "v4.3：tombstone source of truth 已移至 symbol-table.json。v4.5：id_index.json 的 tombstones 區塊已移除（純 generated projection，只保留 $integrity + entries[]）。",
+    "source_of_truth": "symbol-table.json",
+    "id_index_tombstones": "removed（v4.5）",
+    "append_only": true,
+    "allow_delete": false,
+    "allow_modify": false,
+    "violation": "修改或刪除 tombstone 條目視為 INTEGRITY_VIOLATION"
+  },
+  "migration": {
+    "upgrade_from": [
+      "3.2",
+      "4.0",
+      "4.1",
+      "4.2"
+    ],
+    "to_version": "4.3",
+    "breaking_changes": [
+      "id 欄位 → uid（系統身份）+ display_id（人類拓撲）[from v3.2]",
+      "affects[]（自由字串）→ effect[]{uid, edge_type}（結構化）[from v3.2]",
+      "cross_links 禁止使用 display_id，改用 uid [from v3.2]",
+      "uid entropy 48-bit（12位）→ 64-bit（16位）[v4.3 新增；存量 uid 不強制遷移]",
+      "tombstone source of truth 從 id_index.json 移至 symbol-table.json [v4.3 新增]"
+    ],
+    "migration_tool": "node migrate_v3_to_v4.js --dry-run",
+    "post_migration": "node compile.js --validate-only",
+    "migration_log": [
+      {
+        "version": "4.0",
+        "date": "2026-05-16",
+        "changes": "初版 v4.0 架構。uid/display_id 分離，effect[] 結構化，compile.js toolchain，edge_registry。"
+      },
+      {
+        "version": "4.3",
+        "date": "2026-05-17",
+        "changes": "uid entropy 64-bit；compile.js token weight 預計算；tombstone 升級為 identity lineage schema 並移入 symbol-table.json；Tree/Overlay authority precedence 靜態規則化；AGENTS.md 四層拆分；schema migration_log 建立。"
+      }
+    ]
+  },
+  "deprecation_registry": {
+    "id_field": {
+      "deprecated_in": "4.0",
+      "replaced_by": [
+        "uid",
+        "display_id"
+      ],
+      "status": "removed"
+    },
+    "affects_array": {
+      "deprecated_in": "4.0",
+      "replaced_by": "effect[]",
+      "status": "removed"
+    },
+    "id_index_tombstones": {
+      "deprecated_in": "4.3",
+      "replaced_by": "symbol-table.json",
+      "status": "deprecated",
+      "removal_target": "4.5"
+    }
+  },
+  "migration_log": [
+    {
+      "version": "4.5",
+      "date": "2026-05-19",
+      "summary": "Commander/Worker 架構：新增 BUILD（指揮官 session）/ EXECUTE（Worker session）模式；execution-contract layer；constraint-vocab；code-spec layer；compile.js --extract / --validate-contract；廢棄 id_index tombstones；A9 scope freeze 公理。"
+    }
+  ]
+}

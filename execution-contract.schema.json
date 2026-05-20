@@ -1,0 +1,92 @@
+{
+  "$schema": "execution-contract/v1.0",
+  "$comment": "STR execution_contract schema — Commander session 輸出格式。v4.5 建立。",
+  "version": "1.0",
+  "created": "2026-05-18",
+
+  "required": ["role", "task", "interfaces", "dependencies", "constraints", "scope", "validation"],
+
+  "forbidden_fields": [
+    "rationale",
+    "history",
+    "alternatives",
+    "why",
+    "external_references",
+    "future_work",
+    "optimization_notes",
+    "architecture_notes"
+  ],
+
+  "properties": {
+    "role": {
+      "required": ["identity", "forbidden_authorities"],
+      "description": "由 Commander AI 填入，compile.js --validate-contract 驗證存在性",
+      "example": {
+        "identity": "Worker AI — implementation executor",
+        "forbidden_authorities": [
+          "architecture redesign",
+          "interface expansion",
+          "abstraction synthesis",
+          "cross-module refactor",
+          "task reprioritization"
+        ]
+      }
+    },
+
+    "task": {
+      "required": ["node", "uid", "type", "target_file", "target_symbol"],
+      "description": "本次 Worker session 的實作目標",
+      "fields": {
+        "node":          "display_id，例如 L3K-A-B2-C5",
+        "uid":           "節點 uid（16位 hex）",
+        "type":          "實作類型，例如 function / module / class",
+        "target_file":   "目標源碼檔案路徑",
+        "target_symbol": "目標函數或模組名稱"
+      }
+    },
+
+    "interfaces": {
+      "required": ["signature", "inputs", "outputs"],
+      "description": "完整 interface 定義，禁止 Worker 擴充或修改",
+      "fields": {
+        "signature": "完整函數簽名，含型別標注",
+        "inputs":    "輸入參數描述（陣列）",
+        "outputs":   "輸出描述"
+      }
+    },
+
+    "dependencies": {
+      "required": ["reads", "writes"],
+      "description": "直接依賴節點清單，來自 build_slice 的 depth=1 依賴",
+      "item_fields": ["display_id", "title", "uid"],
+      "note": "reads/writes 的 display_id 必須存在於 graph。compile.js --validate-contract 會驗證。"
+    },
+
+    "constraints": {
+      "required": ["forbidden", "required"],
+      "description": "constraint 詞彙必須來自 constraint-vocab.md。compile.js --validate-contract 會驗證詞彙表對應。",
+      "fields": {
+        "forbidden": "禁止詞彙陣列（來自 constraint-vocab.md forbidden 區段）",
+        "required":  "必須滿足詞彙陣列（來自 constraint-vocab.md must_satisfy 區段）"
+      }
+    },
+
+    "scope": {
+      "required": ["allowed_files", "allowed_symbols", "forbidden_actions"],
+      "description": "Worker session 的操作邊界",
+      "fields": {
+        "allowed_files":     "允許修改的檔案清單",
+        "allowed_symbols":   "允許新增或修改的 symbol 清單",
+        "forbidden_actions": "本次 session 明確禁止的操作"
+      }
+    },
+
+    "validation": {
+      "required": ["must_pass"],
+      "description": "Worker 完成後必須通過的驗收條件",
+      "fields": {
+        "must_pass": "驗收條件陣列（字串描述）"
+      }
+    }
+  }
+}

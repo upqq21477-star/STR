@@ -1,0 +1,44 @@
+{
+  "$schema_version": "4.3",
+  "$minimum_reader_version": "4.0",
+  "$role": "system_registry",
+  "$note": "認知 / 啟發層。存放 heuristic 知識：anti-patterns、failure signatures、設計啟發、禁忌方向。與 ref 系統分離的原因：heuristic 知識隨使用經驗演化，如果與確定性公式混放，會造成 prompt 中 deterministic 與 probabilistic 資訊互相污染，影響 AI 推理品質。",
+
+  "$system_id": "l3k-cognition",
+  "display_name": "認知 / 啟發層",
+  "updated_at": "",
+  "write_count": 0,
+  "derived_from_l0_write_count": 0,
+
+  "owns_tags": {
+    "anti-pattern": {
+      "priority": 0.95,
+      "category": "heuristic",
+      "description": "已知的失敗模式節點",
+      "related": []
+    },
+    "啟發規則": {
+      "priority": 0.85,
+      "category": "heuristic",
+      "description": "條件性設計建議",
+      "related": []
+    }
+  },
+
+  "shared_state": {
+    "$source": "derived_from_l0",
+    "reads":  [],
+    "writes": []
+  },
+
+  "design_memory": {
+    "$note": "此系統本身就是 design_memory 的體現，所以 anti_patterns 欄位只放跨系統認知層面的 meta 問題（如：認知層節點寫得太抽象無法觸發 AI 警示）。",
+    "anti_patterns": [],
+    "forbidden_directions": [
+      "cognition 系統節點不得帶有確定性數值或公式（存放於 ref 系統）",
+      "anti-pattern 節點必須使用 failure_signature 格式，不得只有描述性文字"
+    ]
+  },
+
+  "id_index": []
+}
